@@ -1,15 +1,80 @@
 // For this activity you will be building a fake banking application that allows a user to keep track of transactions on a bank.txt file. The text file has already been populated with some starter data to give you a place to begin from. See the commands below as well as their descriptions for further guidance (Hint: You will need to use the 'fs' node package to complete this activity).
+require('console.table')
+const fs = require('fs')
+const chalk = require('chalk')
 
-// Command #1: node bank.js deposit <Dollar_Amount> (ex: node bank.js deposit 25)
-// For this command, take the amount provided and append it onto the bank.txt file. Keep in mind that values in the text file are separated by a ', ' so make sure to include that.
+const action = process.argv[2]
+const amount = process.argv[3]
 
-// Command #2: node bank.js withdraw <Dollar_Amount> (ex: node bank.js withdraw 25)
-// For this command, take the amount provided and append the negative of it onto the bank.txt file. Keep in mind that values in the text file are separated by a ', ' so make sure to include that.
+switch (action) {
+  // Command #1: node bank.js deposit <Dollar_Amount> (ex: node bank.js deposit 25)
+  // For this command, take the amount provided and append it onto the bank.txt file. Keep in mind that values in the text file are separated by a ', ' so make sure to include that.
+  case 'deposit':
+    fs.appendFile('bank.txt', `, ${amount}`, err => {
+      if (err) { console.log(err) }
+      console.log(chalk.bgGreen(chalk.black('Money Deposited!')))
+    })
+    break
 
-// Command #3: node bank.js lotto
-// For this command, create a randomizer that outputs a win/lose situation (ex: get a random number between 1 & 50. If it's less than 25 they win, if it's greater they lose.). Append onto the bank.txt file a withdrawal of 25 cents. If they win the lottery also append a deposit of 10 dollars. Keep in mind that values in the text file are separated by a ', ' so make sure to include that.
+  // Command #2: node bank.js withdraw <Dollar_Amount> (ex: node bank.js withdraw 25)
+  // For this command, take the amount provided and append the negative of it onto the bank.txt file. Keep in mind that values in the text file are separated by a ', ' so make sure to include that.
+  case 'withdraw':
+    fs.appendFile('bank.txt', `, -${amount}`, err => {
+      if (err) { console.log(err) }
+      console.log(chalk.bgYellow(chalk.black('Money withdrawn!')))
+    })
+    break
 
-// Command #3: node bank.js balance
-// For this command, retrieve all the transaction values from the bank.txt file. Separate the string into it's individual parts (Hint: look up the string '.split()' method). Total up all transactions and output a total balance for the user.
+  // Command #3: node bank.js lotto
+  // For this command, create a randomizer that outputs a win/lose situation (ex: get a random number between 1 & 50. If it's less than 25 they win, if it's greater they lose.). Append onto the bank.txt file a withdrawal of 25 cents. If they win the lottery also append a deposit of 10 dollars. Keep in mind that values in the text file are separated by a ', ' so make sure to include that.
+  case 'lotto':
+    // const random = Math.floor(Math.random() * 100)
+    // let record = ''
+    // if (random < 50) {
+    //   record = ', -0.25, 10'
+    // } else {
+    //   record = ', -0.25'
+    // }
+      fs.appendFile('bank.txt', `, -0.25${Math.floor(Math.random() * 100) < 50 ? ', 10' : ''}`, err => {
+      if (err) { console.log(err) }
+      console.log(chalk.bgRed(chalk.black('Good luck!')))
+    })
+    break
 
-// BONUS: Begin learning about NPM (https://www.npmjs.com/). There is a package called 'console.table'. See if you can set up a command for 'node bank.js transactions', which would display a table with every transaction made by the user. This is a stretch so don't worry if it's too hard.
+  // Command #3: node bank.js balance
+  // For this command, retrieve all the transaction values from the bank.txt file. Separate the string into it's individual parts (Hint: look up the string '.split()' method). Total up all transactions and output a total balance for the user.
+    case 'balance':
+      fs.readFile('bank.txt', 'utf8', (err, data) => {
+        if (err) { console.log(err) }
+        const transactions = data.split(', ')
+        // console.log(transactions)
+        let total = 0
+        for (let i = 0; i < transactions.length; i++) {
+          total += parseFloat(transactions[i])
+        }
+        const temp = `${total}`
+        const tempArr = temp.split('.')
+        console.log(chalk.bgBlue(chalk.black(`Your current balance: $${tempArr[0]}.${tempArr[1].length === 1 ? `${tempArr[1]}0` : tempArr[1]}`)))
+      })
+      break
+  // BONUS: Begin learning about NPM (https://www.npmjs.com/). There is a package called 'console.table'. See if you can set up a command for 'node bank.js transactions', which would display a table with every transaction made by the user. This is a stretch so don't worry if it's too hard.
+      case 'transactions':
+        fs.readFile('bank.txt', 'utf8', (err, data) => {
+          if (err) { console.log(err) }
+          let transactions = data.split(', ')
+          transactions = transactions.map(transaction => {
+            const amount = parseFloat(transaction)
+            if (amount >= 0) {
+              return {
+                deposit: amount
+              }
+            } else {
+              return {
+                withdrawal: amount * -1
+              }
+            }
+          })
+          console.table(transactions)
+        })
+        break
+}
